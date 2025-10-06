@@ -1,0 +1,32 @@
+{
+    "name": "WikiSearchMapsLink",
+    "version": "1.0.0",
+	"author": [
+		"[https://www.mediawiki.org/wiki/User:BertrandGorge Bertrand Gorge]"
+	],
+	"manifest_version": 2,
+    "url": "https://github.com/neayi/WikiSearchMapsLink",
+    "description": "This extension binds WikiSearch and Semantic Maps",
+    "type": "other",
+    "license-name": "GPL-3.0-or-later",
+    "Hooks": {
+        "BeforePageDisplay": "MediaWiki\\Extension\\WikiSearchMapsLink\\WikiSearchMapsLinkHooks::onBeforePageDisplay"
+    },
+	"AutoloadNamespaces": {
+		"MediaWiki\\Extension\\WikiSearchMapsLink\\": "src/"
+	},
+    "ResourceModules": {
+        "ext.wikiSearchMapsLink": {
+            "scripts": [
+                "bindWikiSearchAndSemanticMaps.js"
+            ],
+			"dependencies": [
+				"jquery.ui",
+				"mediawiki.api"
+			],
+            "position": "bottom",
+            "localBasePath": "resources",
+            "remoteExtPath": "WikiSearchMapsLink/resources"
+        }
+    }
+}
