@@ -49,38 +49,40 @@
 				// We limit the number of results to what is configured in the map
 				geoParams.limit = map.options.limit ?? 500;
 
-				// Use the WikiSearch API to get the results
-				let api = new mw.Api();
-				api.post(geoParams).done(function(data) {
-					let hits = JSON.parse(data.result.hits);
+				// Use the WikiSearch API to get the results (delayed by 500ms)
+				setTimeout(() => {
+					let api = new mw.Api();
+					api.post(geoParams).done(function(data) {
+						let hits = JSON.parse(data.result.hits);
 
-					map.removeMarkers();
+						map.removeMarkers();
 
-					hits.forEach(hit => {
+						hits.forEach(hit => {
 
-						// Get the first member of the source object that has a geoField key
-						let geoField = Object.values(hit._source).find(t => Object.keys(t).includes('geoField'));
+							// Get the first member of the source object that has a geoField key
+							let geoField = Object.values(hit._source).find(t => Object.keys(t).includes('geoField'));
 
-						if (!geoField) {
-							throw new Error("Please make sure that WikiSearchConfig has the GEO property in the list of fields to fetch");
-						}
+							if (!geoField) {
+								throw new Error("Please make sure that WikiSearchConfig has the GEO property in the list of fields to fetch");
+							}
 
-						let coordinates = geoField.geoField[0].split(',');
+							let coordinates = geoField.geoField[0].split(',');
 
-						let title = hit._source.subject.title;
-						let url = mw.util.getUrl(title);
+							let title = hit._source.subject.title;
+							let url = mw.util.getUrl(title);
 
-						let markerOptions = {
-							lat: coordinates[0],
-							lon: coordinates[1],
-							title: title,
-							text: '<b><a href="' + url + '">' + title + '</a></b>',
-							icon: ""
-						};
+							let markerOptions = {
+								lat: coordinates[0],
+								lon: coordinates[1],
+								title: title,
+								text: '<b><a href="' + url + '">' + title + '</a></b>',
+								icon: ""
+							};
 
-						map.addMarker( markerOptions );
+							map.addMarker( markerOptions );
+						});
 					});
-				});
+				}, 500);
 			}
 		});
 	}
