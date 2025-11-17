@@ -17,27 +17,33 @@
 		// Extension initialization code goes here
 		console.log( 'WikiSearchMapsLink extension loaded' );
 
+		// Ignore this event if there are no maps on the page
+		if (window.mapsLeafletList === undefined || window.mapsLeafletList.length === 0) {
+			return;
+		}
+
+		// Get the first map on the page that has the ajaxcoordproperty set
+		let map = window.mapsLeafletList.find(map => map.options.ajaxcoordproperty !== undefined && map.options.ajaxcoordproperty.length > 0);
+		if (!map) {
+			console.log('No map with ajaxcoordproperty found');
+			return;
+		}
+		// We grab the property which contains the coordinates
+		let coordinatesProperty = map.options.ajaxcoordproperty;
+				
+		// Move the map to the top of the results
+		map.prependTo( '.wikisearch-results' );
+
+		// add a margin to the bottom of the map to separate it from the results
+		map.css( "margin-bottom", "26px" );
+
 		// We listen to the pre-api-call hook of WikiSearchFront
 		mw.hook('wikisearchfrontent-pre-api-call').add(function(params) {
 			if (params.action === 'query') {
 
-				// Ignore this event if there are no maps on the page
-				if (window.mapsLeafletList === undefined || window.mapsLeafletList.length === 0) {
-					return;
-				}
-
 				// We clone the params to not modify the original object (which is going to be user by WikiSearchFront later)
 				let geoParams = { ...params };
 
-				// Get the first map on the page that has the ajaxcoordproperty set
-				let map = window.mapsLeafletList.find(map => map.options.ajaxcoordproperty !== undefined && map.options.ajaxcoordproperty.length > 0);
-				if (!map) {
-					console.log('No map with ajaxcoordproperty found');
-					return;
-				}
-
-				// We grab the property which contains the coordinates
-				let coordinatesProperty = map.options.ajaxcoordproperty;
 
 				let filters = JSON.parse(params.filter);
 
