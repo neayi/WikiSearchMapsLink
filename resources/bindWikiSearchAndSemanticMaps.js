@@ -50,7 +50,6 @@
 				// We clone the params to not modify the original object (which is going to be user by WikiSearchFront later)
 				let geoParams = { ...params };
 
-
 				let filters = JSON.parse(params.filter);
 
 				// We only want results which have coordinates
@@ -66,8 +65,15 @@
 					let api = new mw.Api();
 					api.post(geoParams).done(function(data) {
 						let hits = JSON.parse(data.result.hits);
-
+						
 						map.removeMarkers();
+
+						// if no hits, we hide the map with a vertical animation
+						if (hits.length === 0) {
+							$(map).slideUp();
+						} else {
+							$(map).slideDown();
+						}
 
 						hits.forEach(hit => {
 
