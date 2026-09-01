@@ -19,6 +19,15 @@
 
 		let map = undefined;
 		let coordinatesProperty = undefined;
+		let originalPopups = undefined;
+
+		// Match key between a search hit and an original marker: the page title.
+		// Maps sets marker.options.title to Title::getFullText() and WikiSearch's
+		// subject.title is the DB key with underscores turned into spaces, so both
+		// sides are the space-separated page name (no namespace prefix for NS_MAIN).
+		function titleKey(title) {
+			return typeof title === 'string' ? title.replace(/_/g, ' ').trim() : '';
+		}
 
 		// We listen to the pre-api-call hook of WikiSearchFront
 		mw.hook('wikisearchfrontent-pre-api-call').add(function(params) {
@@ -43,6 +52,33 @@
 
 				// add a margin to the bottom of the map to separate it from the results
 				map.css( "margin-bottom", "26px" );
+
+				// Capture the template-rendered popups Maps produced on page load, keyed by
+				// page title, so we can reuse them on the markers we recreate below (the
+				// search results are always a subset of the map's initial query). Keying by
+				// title rather than coordinates keeps distinct pages at the same location apart.
+				originalPopups = new Map();
+				let markerLayer = map.mapContent && map.mapContent.markerLayer;
+				if (markerLayer) {
+					markerLayer.eachLayer(function (m) {
+						if (typeof m.getPopup !== 'function' || !m.options) {
+							return;
+						}
+						let key = titleKey(m.options.title);
+						if (key === '') {
+							return;
+						}
+						let popup = m.getPopup();
+						if (!popup) {
+							return;
+						}
+						let content = popup.getContent();
+						if (typeof content !== 'string' || content.length === 0) {
+							return;
+						}
+						originalPopups.set(key, content);
+					});
+				}
 			}
 
 			if (params.action === 'query') {
@@ -89,11 +125,16 @@
 							let title = hit._source.subject.title;
 							let url = mw.util.getUrl(title);
 
+							// Reuse the template-rendered popup captured on page load; fall back
+							// to a plain title link for hits absent from the initial map render.
+							let text = (originalPopups && originalPopups.get(titleKey(title)))
+								|| '<b><a href="' + url + '">' + title + '</a></b>';
+
 							let markerOptions = {
 								lat: coordinates[0],
 								lon: coordinates[1],
 								title: title,
-								text: '<b><a href="' + url + '">' + title + '</a></b>',
+								text: text,
 								icon: ""
 							};
 
